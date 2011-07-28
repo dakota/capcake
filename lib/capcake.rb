@@ -15,7 +15,6 @@ Capistrano::Configuration.instance(:must_exist).load do
   # =========================================================================
 
   set :application,   ""
-  set :branch,        "master"
   set :deploy_to,     ""
   set :keep_releases, 5
   set :repository,    ""
@@ -36,7 +35,7 @@ Capistrano::Configuration.instance(:must_exist).load do
 
   set :git_flag_quiet,        ""
 
-  _cset(:cake_branch)         { "" }
+  _cset(:cake_branch)         { "master" }
   _cset(:cake_repo)           { "http://github.com/cakephp/cakephp.git" }
   _cset :tmp_children,        %w(cache logs sessions tests)
   _cset :cache_children,      %w(models persistent views)
@@ -100,7 +99,7 @@ Capistrano::Configuration.instance(:must_exist).load do
       tmp_dirs += cache_children.map { |d| File.join(cache_path, d) }
       run "#{try_sudo} mkdir -p #{(dirs + tmp_dirs).join(' ')} && #{try_sudo} chmod -R 777 #{tmp_path}" if (!user.empty?)
       set :git_flag_quiet, "-q "
-      cake.setup if (!cake_branch.empty?)
+      cake.update if (!cake_branch.empty?)
     end
 
     desc <<-DESC
@@ -444,6 +443,7 @@ Capistrano::Configuration.instance(:must_exist).load do
     task :update do
       set :cake_branch, ENV['BRANCH'] if ENV.has_key?('BRANCH')
       stream "cd #{cake_path}/cakephp && git checkout #{git_flag_quiet}#{cake_branch}"
+      stream "cd #{cake_path}/cakephp && git submodule init && git submodule update"
     end
 
     namespace :cache do
